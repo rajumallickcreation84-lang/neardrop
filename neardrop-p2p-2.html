@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#101827">
+<title>NearDrop — Peer-to-Peer File Transfer</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d2e;--panel2:#172438;--line:#293950;--text:#edf4ff;--muted:#9aabc2;--accent:#63e6be;--blue:#7aa7ff;--danger:#ff7b86}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#203653 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{width:min(960px,calc(100% - 32px));margin:36px auto 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#63e6be,#7aa7ff);display:grid;place-items:center;color:#071421;font-size:23px;font-weight:900}.brand h1{font-size:21px;margin:0;letter-spacing:-.5px}.brand p{margin:1px 0 0;color:var(--muted);font-size:12px}.pill{border:1px solid var(--line);padding:7px 11px;border-radius:99px;color:var(--muted);font-size:12px}.hero{text-align:center;margin:22px auto 28px;max-width:660px}.hero h2{font-size:clamp(26px,5vw,39px);line-height:1.12;letter-spacing:-1.1px;margin:0 0 12px}.hero h2 span{color:var(--accent)}.hero p{color:var(--muted);margin:0}
+.status{display:flex;justify-content:center;align-items:center;gap:9px;margin:18px auto 26px;color:var(--muted);font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:#77869b}.dot.good{background:var(--accent);box-shadow:0 0 12px #63e6be88}.dot.bad{background:var(--danger)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:linear-gradient(160deg,#17263a,#111b2b);border:1px solid var(--line);border-radius:20px;padding:22px;min-width:0}.card h3{margin:0 0 5px;font-size:18px}.sub{color:var(--muted);font-size:13px;margin:0 0 18px}.step{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#263b55;color:var(--accent);font-size:12px;font-weight:800;margin-right:7px}
+button,.filelabel{border:0;border-radius:12px;padding:11px 15px;font:600 14px system-ui;cursor:pointer;transition:.15s}.primary{background:var(--accent);color:#071a18}.secondary{background:#263a55;color:var(--text);border:1px solid #38506d}.ghost{background:transparent;color:var(--blue);border:1px solid var(--line)}button:hover,.filelabel:hover{filter:brightness(1.09);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.actions{display:flex;gap:9px;flex-wrap:wrap}.qrbox{background:#f7f9fc;border-radius:14px;min-height:190px;display:grid;place-items:center;padding:12px;margin:15px 0;color:#182233;overflow:hidden}.qrbox canvas,.qrbox img{max-width:100%;height:auto!important}.placeholder{text-align:center;color:#627187;font-size:13px;padding:28px}.placeholder b{display:block;font-size:32px;margin-bottom:6px}.field{width:100%;background:#0b1422;border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px 12px;font:13px ui-monospace,monospace;resize:vertical;min-height:78px}.field:focus{outline:2px solid #63e6be55;border-color:var(--accent)}.hint{font-size:12px;color:var(--muted);margin:9px 0 0}.divider{display:flex;align-items:center;gap:10px;color:#708198;font-size:11px;margin:15px 0}.divider:before,.divider:after{content:"";height:1px;background:var(--line);flex:1}.camera{width:100%;border-radius:12px;background:#050a11;max-height:260px;display:none;margin:12px 0}.filearea{margin-top:17px}.drop{border:1px dashed #49617f;border-radius:15px;padding:24px 15px;text-align:center;background:#0e1928}.drop strong{display:block;margin:4px 0}.drop p{margin:0 0 13px;color:var(--muted);font-size:12px}.filelabel{display:inline-block;background:#263a55;color:white}.filelabel input{display:none}.transfer{margin-top:16px;background:#0d1725;border:1px solid var(--line);border-radius:14px;padding:15px;display:none}.transfer-head{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:9px}.muted{color:var(--muted)}.bar{height:9px;background:#26364a;border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#63e6be,#7aa7ff);border-radius:99px;transition:width .12s}.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:7px}.notice{margin-top:17px;border:1px solid #344961;background:#101c2c;border-radius:13px;padding:13px 15px;color:var(--muted);font-size:12px}.notice b{color:var(--text)}.full{grid-column:1/-1}.log{max-height:120px;overflow:auto;font:11px/1.6 ui-monospace,monospace;color:#a9bad0;white-space:pre-wrap}.hidden{display:none!important}footer{text-align:center;color:#718198;font-size:11px;margin:24px 0 0}
+@media(max-width:700px){main{margin:20px auto 40px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.pill{font-size:10px}.card{padding:18px}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div class="brand"><div class="logo">↗</div><div><h1>NearDrop</h1><p>Direct device-to-device sharing</p></div></div>
+    <div class="pill">🔒 No cloud uploads</div>
+  </header>
+  <section class="hero">
+    <h2>Send files. <span>Not through a server.</span></h2>
+    <p>Connect two devices with QR codes and transfer files directly over WebRTC.</p>
+  </section>
+  <div class="status"><span id="statusDot" class="dot"></span><span id="statusText">Not connected · Start by creating or scanning a connection</span></div>
+
+  <section class="grid">
+    <article class="card">
+      <h3><span class="step">1</span>Create connection</h3>
+      <p class="sub">On the device that will send the first connection invite.</p>
+      <div class="actions">
+        <button class="primary" id="createOffer">Generate offer QR</button>
+        <button class="ghost" id="copyOffer" disabled>Copy offer text</button>
+      </div>
+      <div class="qrbox" id="offerQr"><div class="placeholder"><b>▦</b>Offer QR code appears here</div></div>
+      <p class="hint">On the other device, scan this QR or paste the offer text below.</p>
+      <textarea id="offerText" class="field" placeholder="Offer data appears here. You can also paste received offer data." spellcheck="false"></textarea>
+      <div class="actions" style="margin-top:9px"><button class="secondary" id="useOffer">Use pasted offer & create answer</button></div>
+    </article>
+
+    <article class="card">
+      <h3><span class="step">2</span>Join connection</h3>
+      <p class="sub">Scan the offer QR, then show the answer QR to the first device.</p>
+      <div class="actions">
+        <button class="secondary" id="scanOffer">📷 Scan offer QR</button>
+        <button class="ghost" id="scanAnswer">📷 Scan answer QR</button>
+      </div>
+      <video id="camera" class="camera" playsinline></video>
+      <div class="qrbox" id="answerQr"><div class="placeholder"><b>▦</b>Answer QR code appears here</div></div>
+      <p class="hint">Or paste the answer data here on the original device.</p>
+      <textarea id="answerText" class="field" placeholder="Paste answer data here..." spellcheck="false"></textarea>
+      <div class="actions" style="margin-top:9px"><button class="secondary" id="useAnswer">Apply answer</button><button class="ghost" id="stopCamera">Stop camera</button></div>
+    </article>
+
+    <article class="card full">
+      <h3>3 · Send files</h3>
+      <p class="sub">Choose a file after the status says Connected. Files are split into small chunks before sending.</p>
+      <div class="drop">
+        <div style="font-size:25px">📁</div><strong>Choose a file to send</strong>
+        <p>Large files supported · 64 KiB chunks · direct encrypted WebRTC data channel</p>
+        <label class="filelabel">Select file <input id="fileInput" type="file" disabled></label>
+      </div>
+      <div class="transfer" id="sendTransfer">
+        <div class="transfer-head"><b id="sendName">Sending file</b><span id="sendPercent">0%</span></div>
+        <div class="bar"><i id="sendBar"></i></div><div class="meta"><span id="sendBytes">0 B sent</span><span id="sendSpeed"></span></div>
+      </div>
+      <div class="transfer" id="receiveTransfer">
+        <div class="transfer-head"><b id="receiveName">Receiving file</b><span id="receivePercent">0%</span></div>
+        <div class="bar"><i id="receiveBar"></i></div><div class="meta"><span id="receiveBytes">0 B received</span><span id="receiveInfo"></span></div>
+      </div>
+      <div class="actions" style="margin-top:13px"><button class="ghost" id="disconnect">Disconnect</button></div>
+      <div class="notice"><b>Privacy:</b> The file data travels through an encrypted WebRTC data channel. The QR code exchanges connection details only; no file is uploaded to this page's host.</div>
+    </article>
+    <article class="card full">
+      <h3>Connection activity</h3><div class="log" id="log">Ready. For QR scanning, allow camera access when prompted.</div>
+    </article>
+  </section>
+  <footer>NearDrop · HTML + CSS + JavaScript · WebRTC DataChannel</footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const CHUNK = 64 * 1024;
+  const HIGH_WATER = 4 * 1024 * 1024;
+  let pc = null, channel = null, role = null, cameraStream = null, scanMode = null;
+  let incoming = null, outgoing = null, scanBusy = false;
+
+  const log = msg => { const el=$('log'); el.textContent = new Date().toLocaleTimeString()+'  '+msg+'\n'+el.textContent; };
+  const status = (msg, good=false) => { $('statusText').textContent=msg; $('statusDot').className='dot'+(good?' good':''); };
+  const bytes = n => { if(!Number.isFinite(n)) return '0 B'; const u=['B','KB','MB','GB','TB']; let i=0; while(n>=1024&&i<u.length-1){n/=1024;i++} return `${n.toFixed(i?1:0)} ${u[i]}`; };
+  const wait = ms => new Promise(r=>setTimeout(r,ms));
+
+  function resetPeer() {
+    stopCamera();
+    if(channel) { try{channel.close()}catch(e){} }
+    if(pc) { try{pc.close()}catch(e){} }
+    pc=null; channel=null; role=null; incoming=null; outgoing=null;
+    $('fileInput').disabled=true;
+    $('sendTransfer').style.display='none'; $('receiveTransfer').style.display='none';
+    status('Not connected · Create or scan a connection');
+  }
+  function createPeer(kind) {
+    resetPeer(); role=kind;
+    // No STUN/TURN servers: candidates are gathered locally and exchanged inside QR payloads.
+    pc = new RTCPeerConnection({iceServers:[]});
+    pc.oniceconnectionstatechange = () => {
+      log('ICE state: '+pc.iceConnectionState);
+      if(pc.iceConnectionState==='failed' || pc.iceConnectionState==='disconnected') status('Connection interrupted');
+    };
+    pc.onconnectionstatechange = () => {
+      log('Peer state: '+pc.connectionState);
+      if(pc.connectionState==='connected') status('Connected · Ready to transfer files',true);
+      if(pc.connectionState==='failed' || pc.connectionState==='closed') status('Connection '+pc.connectionState);
+    };
+    pc.ondatachannel = e => setupChannel(e.channel);
+    return pc;
+  }
+  function setupChannel(ch) {
+    channel=ch; channel.binaryType='arraybuffer'; channel.bufferedAmountLowThreshold=1024*1024;
+    channel.onopen=()=>{status('Connected · Ready to transfer files',true);$('fileInput').disabled=false;log('Data channel open. Direct connection ready.');};
+    channel.onclose=()=>{status('Data channel closed');$('fileInput').disabled=true;log('Data channel closed.');};
+    channel.onerror=e=>log('Data channel error: '+(e.message||'unknown'));
+    channel.onmessage=handleMessage;
+  }
+  function showQR(target, text) {
+    target.innerHTML='';
+    if(!window.QRCode){target.innerHTML='<div class="placeholder">QR library did not load. Copy the text below instead.</div>';return;}
+    try { new QRCode(target,{text,width:280,height:280,colorDark:'#101827',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.L}); }
+    catch(e){target.innerHTML='<div class="placeholder">QR data is too large for a QR code. Use copy/paste text instead.</div>';log('QR generation failed: '+e.message);}
+  }
+  async function waitIce(p) {
+    if(p.iceGatheringState==='complete') return;
+    await new Promise((resolve,reject)=>{
+      const timer=setTimeout(()=>{cleanup();reject(new Error('ICE gathering timed out. Try again or use copy/paste.'));},20000);
+      const fn=()=>{if(p.iceGatheringState==='complete'){cleanup();resolve();}};
+      const cleanup=()=>{clearTimeout(timer);p.removeEventListener('icegatheringstatechange',fn);};
+      p.addEventListener('icegatheringstatechange',fn);
+    });
+  }
+  const encode = obj => btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  const decode = str => JSON.parse(decodeURIComponent(escape(atob(str.trim()))));
+  function payload(type, description) { return encode({app:'neardrop-v1',type,description}); }
+  function readPayload(raw, expected) {
+    const data=decode(raw);
+    if(data.app!=='neardrop-v1'||data.type!==expected||!data.description) throw new Error('This QR/text is not a valid NearDrop '+expected+'.');
+    return data.description;
+  }
+
+  $('createOffer').onclick=async()=>{
+    try {
+      $('createOffer').disabled=true; status('Creating offer…');
+      const p=createPeer('offerer'); setupChannel(p.createDataChannel('file-transfer',{ordered:true}));
+      const offer=await p.createOffer(); await p.setLocalDescription(offer); await waitIce(p);
+      const text=payload('offer',p.localDescription);
+      $('offerText').value=text; $('copyOffer').disabled=false; showQR($('offerQr'),text);
+      status('Offer ready · Scan it with the other device'); log('Offer created. Scan QR on the receiving device.');
+    } catch(e){log('Offer error: '+e.message);status('Could not create offer');}
+    finally{$('createOffer').disabled=false;}
+  };
+  $('copyOffer').onclick=()=>copyText($('offerText').value);
+  $('useOffer').onclick=async()=>{
+    try {
+      const desc=readPayload($('offerText').value,'offer');
+      const p=createPeer('answerer'); await p.setRemoteDescription(desc);
+      const answer=await p.createAnswer(); await p.setLocalDescription(answer); await waitIce(p);
+      const text=payload('answer',p.localDescription);
+      $('answerText').value=text; showQR($('answerQr'),text);
+      status('Answer ready · Show this QR to the first device'); log('Offer accepted; answer generated. Scan this answer from the first device.');
+    } catch(e){log('Offer processing error: '+e.message);status('Invalid offer or connection setup failed');}
+  };
+  $('useAnswer').onclick=async()=>{
+    try {
+      if(!pc||role!=='offerer') throw new Error('First create an offer on this device.');
+      const desc=readPayload($('answerText').value,'answer'); await pc.setRemoteDescription(desc);
+      status('Answer applied · Connecting…'); log('Answer applied. Waiting for direct connection.');
+    } catch(e){log('Answer error: '+e.message);status(e.message);}
+  };
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); log('Connection text copied.'); }
+    catch(e){log('Clipboard unavailable. Select and copy the text manually.');}
+  }
+
+  $('scanOffer').onclick=()=>startCamera('offer');
+  $('scanAnswer').onclick=()=>startCamera('answer');
+  async function startCamera(mode) {
+    if(!window.jsQR){log('QR scanner library failed to load. Paste the QR text instead.');return;}
+    try {
+      stopCamera(); scanMode=mode;
+      cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      const v=$('camera');v.srcObject=cameraStream;v.style.display='block';await v.play();scanBusy=false;
+      log('Camera started. Point it at the '+mode+' QR code.');
+      requestAnimationFrame(scanFrame);
+    } catch(e){log('Camera unavailable: '+e.message+' — use paste text instead.');}
+  }
+  function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}$('camera').style.display='none';$('camera').srcObject=null;scanMode=null;}
+  function scanFrame(){
+    const v=$('camera'); if(!cameraStream||!scanMode)return;
+    if(v.readyState===v.HAVE_ENOUGH_DATA&&!scanBusy){
+      const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;
+      const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(v,0,0,c.width,c.height);
+      const result=jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height,{inversionAttempts:'dontInvert'});
+      if(result&&result.data){scanBusy=true;const mode=scanMode;stopCamera();if(mode==='offer'){$('offerText').value=result.data;$('useOffer').click();}else{$('answerText').value=result.data;$('useAnswer').click();}return;}
+    }
+    requestAnimationFrame(scanFrame);
+  }
+  $('stopCamera').onclick=stopCamera;
+
+  async function waitForBuffer() {
+    if(!channel||channel.readyState!=='open') throw new Error('Connection is not open.');
+    while(channel.bufferedAmount>HIGH_WATER) {
+      await new Promise(resolve=>{
+        const timer=setTimeout(resolve,100);
+        channel.addEventListener('bufferedamountlow',()=>{clearTimeout(timer);resolve();},{once:true});
+      });
+      if(channel.readyState!=='open') throw new Error('Connection closed during transfer.');
+    }
+  }
+  $('fileInput').onchange=async e=>{
+    const file=e.target.files[0]; if(!file)return;
+    if(!channel||channel.readyState!=='open'){log('Connect to a peer before selecting a file.');return;}
+    try {
+      outgoing=file; $('sendTransfer').style.display='block';$('sendName').textContent=file.name;
+      const total=file.size, count=Math.ceil(total/CHUNK);
+      channel.send(JSON.stringify({kind:'file-start',name:file.name,size:total,type:file.type||'application/octet-stream',chunks:count}));
+      const start=performance.now();let sent=0;
+      for(let offset=0;offset<total;offset+=CHUNK){
+        await waitForBuffer();
+        const chunk=await file.slice(offset,Math.min(offset+CHUNK,total)).arrayBuffer();
+        await waitForBuffer();channel.send(chunk);sent+=chunk.byteLength;
+        const pct=total?sent/total*100:100;
+        $('sendBar').style.width=pct+'%';$('sendPercent').textContent=Math.floor(pct)+'%';
+        $('sendBytes').textContent=bytes(sent)+' / '+bytes(total);
+        $('sendSpeed').textContent=bytes(sent/Math.max((performance.now()-start)/1000,.1))+'/s';
+      }
+      await waitForBuffer();channel.send(JSON.stringify({kind:'file-end'}));
+      log('Sent '+file.name+' ('+bytes(total)+').');
+    } catch(err){log('Send failed: '+err.message);}
+    finally{e.target.value='';}
+  };
+
+  function handleMessage(event) {
+    if(typeof event.data==='string'){
+      let msg;try{msg=JSON.parse(event.data)}catch(e){log('Received an unknown message.');return;}
+      if(msg.kind==='file-start'){
+        incoming={name:msg.name,size:msg.size,type:msg.type,chunks:[],received:0,start:performance.now()};
+        $('receiveTransfer').style.display='block';$('receiveName').textContent=msg.name;
+        $('receiveBar').style.width='0%';$('receivePercent').textContent='0%';
+        $('receiveBytes').textContent='0 B / '+bytes(msg.size);$('receiveInfo').textContent='Receiving…';
+        log('Receiving '+msg.name+' ('+bytes(msg.size)+').');
+      } else if(msg.kind==='file-end'&&incoming){
+        const blob=new Blob(incoming.chunks,{type:incoming.type});
+        const url=URL.createObjectURL(blob),a=document.createElement('a');
+        a.href=url;a.download=incoming.name;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+        log('Received '+incoming.name+'. Download started.');
+        $('receiveInfo').textContent='Complete · download started';incoming=null;
+      }
+      return;
+    }
+    if(!incoming){log('Received data without file metadata; ignored.');return;}
+    incoming.chunks.push(event.data);incoming.received+=event.data.byteLength;
+    const pct=incoming.size?incoming.received/incoming.size*100:100;
+    $('receiveBar').style.width=pct+'%';$('receivePercent').textContent=Math.floor(pct)+'%';
+    $('receiveBytes').textContent=bytes(incoming.received)+' / '+bytes(incoming.size);
+    $('receiveInfo').textContent=bytes(incoming.received/Math.max((performance.now()-incoming.start)/1000,.1))+'/s';
+  }
+  $('disconnect').onclick=()=>{resetPeer();log('Disconnected.');};
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('scanOffer').disabled=true;$('scanAnswer').disabled=true;log('Camera scanning requires HTTPS or localhost. You can use copy/paste QR text instead.');}
+})();
+</script>
+</body>
+</html>
